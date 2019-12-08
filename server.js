@@ -26,9 +26,9 @@ app.engine(
 app.set("view engine", "handlebars");
 
 //connecting to MongoDB
-//mongoose.connect("mongodb://localhost/MongoScrapper");
+//mongoose.connect("mongodb://localhost/MongoScraper");
 const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost/MongoScrapper";
+  process.env.MONGODB_URI || "mongodb://localhost/MongoScraper";
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
 var db = mongoose.connection;
