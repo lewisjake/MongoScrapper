@@ -1,59 +1,46 @@
-// dependencies and npm
-const express = require('express'),
-mongoose = require('mongoose'),
-exphbs = require('express-handlebars'),
-bodyParser = require('body-parser'),
-logger = require('morgan'),
-path = require('path'),
-favicon = require('serve-favicon');
+//dependencies
+var bodyParser = require("body-parser");
+var mongoose = require("mongoose");
+var logger = require("morgan");
 
-// initialize app
-const app = express();
+//initialize Express app
+var express = require("express");
+var app = express();
 
-// db setup
-const config = require('./config/database');
-mongoose.Promise = Promise;
-mongoose.connect(config.database, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then( result => {
-    console.log(`Connected to database '${result.connections[0].name}' on ${result.connections[0].host}:${result.connections[0].port}`);
-})
-.catch(err => console.log('There was an error with your connection:', err));
+app.use(logger("dev"));
+app.use(
+  bodyParser.urlencoded({
+    extended: false
+  })
+);
 
-// favicon middleware
-app.use(favicon(path.join(__dirname, 'public', 'assets/img/favicon.ico')));
+app.use(express.static(process.cwd() + "/public"));
+//Require set up handlebars
+var exphbs = require("express-handlebars");
+app.engine(
+  "handlebars",
+  exphbs({
+    defaultLayout: "main"
+  })
+);
+app.set("view engine", "handlebars");
 
-// Morgan middleware
-app.use(logger('dev'));
+//connecting to MongoDB
+//mongoose.connect("mongodb://localhost/MongoScrapper");
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://localhost/MongoScrapper";
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
-// body parser
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+var db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", function() {
+  console.log("Connected to Mongoose!");
+});
 
-// handlebars
-app.engine('handlebars', exphbs({defaultLayout: 'main'}));
-app.set('view engine', 'handlebars');
-
-// static routes
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/articles',express.static(path.join(__dirname, 'public')));
-app.use('/notes',express.static(path.join(__dirname, 'public')));
-
-//setting up routes
-const index = require('./routes/index'),
-      articles = require('./routes/articles'),
-      notes = require('./routes/notes'),
-      scrape = require('./routes/scrape');
-
-app.use('/', index);
-app.use('/articles', articles);
-app.use('/notes', notes);
-app.use('/scrape', scrape);
-
-//starting server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, function () {
-  console.log(`Listening on http://localhost:${PORT}`);
+var routes = require("./controller/controller.js");
+app.use("/", routes);
+//Create localhost port
+var port = process.env.PORT || 3000;
+app.listen(port, function() {
+  console.log("Listening on PORT " + port);
 });
